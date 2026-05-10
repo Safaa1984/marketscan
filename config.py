@@ -11,7 +11,7 @@ STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "pk_test_YOUR_KEY")
 STRIPE_WEBHOOK_SECRET  = os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_YOUR_SECRET")
 
 # Price in the smallest currency unit (halalas for SAR: 10 SAR = 1000 halalas)
-REPORT_PRICE_SAR    = 1000          # 10 SAR
+REPORT_PRICE_SAR    = 900           # 9 SAR
 REPORT_CURRENCY     = "sar"
 REPORT_PRODUCT_NAME = "تقرير تحليل تسويقي احترافي"
 
