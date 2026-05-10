@@ -102,8 +102,7 @@ def _generate_and_store(token: str):
 
 @app.route("/")
 def landing():
-    with open(Path(__file__).parent / "static" / "index.html", encoding="utf-8") as f:
-        return f.read()
+    return redirect("https://provision360.net/scan", 301)
 
 
 @app.route("/api/checkout", methods=["POST"])
