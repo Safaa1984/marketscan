@@ -41,7 +41,7 @@ for candidate in [
         break
 
 if PDF_SCRIPT:
-    _ns = {}
+    _ns = {"__file__": str(PDF_SCRIPT)}
     exec(open(PDF_SCRIPT).read(), _ns)
     generate_pdf = _ns.get("generate_report")
 else:
@@ -50,7 +50,7 @@ else:
 # ── Simple report (1 page, free demo) ────────────────────────────────────────
 _simple_path = Path(__file__).parent / "generate_pdf_simple.py"
 if _simple_path.exists():
-    _ns2 = {}
+    _ns2 = {"__file__": str(_simple_path)}
     exec(open(_simple_path).read(), _ns2)
     generate_pdf_simple = _ns2.get("generate_simple_report")
 else:
