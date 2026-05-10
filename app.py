@@ -214,7 +214,20 @@ def download(token):
 
     pdf_path = PDFS.get(token)
     if not pdf_path or not pdf_path.exists():
-        abort(404)
+        err = order.get("error", "")
+        lang = order.get("lang", "ar")
+        if lang == "ar":
+            msg = f"حدث خطأ أثناء إنشاء التقرير. يرجى المحاولة مجدداً.<br><small>{err}</small>"
+        else:
+            msg = f"An error occurred while generating the report. Please try again.<br><small>{err}</small>"
+        return f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <style>body{{font-family:system-ui;background:#0F1E3C;color:white;
+        display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:20px}}
+        .box{{background:#1A2F55;border-radius:16px;padding:40px;max-width:480px}}
+        h2{{color:#F05A28}}a{{color:#C87DB8}}</style></head><body>
+        <div class="box"><h2>⚠️</h2><p>{msg}</p>
+        <a href="javascript:history.back()">← {'رجوع' if lang=='ar' else 'Go Back'}</a></div>
+        </body></html>""", 500
 
     domain   = order["url"].replace("https://","").replace("http://","").split("/")[0]
     filename = f"MarketScan-{domain}.pdf"
