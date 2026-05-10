@@ -2,7 +2,7 @@
 """
 Simple 1-page preview report — free demo tier.
 Shows overall score + top 3 issues + upgrade CTA.
-Requires: reportlab
+Requires: reportlab, arabic-reshaper, python-bidi
 """
 
 from pathlib import Path
@@ -13,8 +13,29 @@ try:
     from reportlab.lib.colors import HexColor, white, black
     from reportlab.lib.units import mm
     from reportlab.pdfgen import canvas as pdfcanvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
 except ImportError:
     raise ImportError("pip install reportlab")
+
+# ── Arabic support ────────────────────────────────────────────────────────────
+def _setup_arabic(script_file):
+    font_path = Path(script_file).parent / "static" / "fonts" / "Cairo-Regular.ttf"
+    if font_path.exists():
+        try:
+            pdfmetrics.registerFont(TTFont("Cairo", str(font_path)))
+            return "Cairo"
+        except Exception:
+            pass
+    return "Helvetica"
+
+def reshape_ar(text):
+    try:
+        import arabic_reshaper
+        from bidi.algorithm import get_display
+        return get_display(arabic_reshaper.reshape(str(text)))
+    except Exception:
+        return str(text)
 
 W, H = A4
 
@@ -73,12 +94,18 @@ def draw_gauge(c, cx, cy, r, score):
 
 
 def generate_simple_report(report_data: dict, output_path: str):
+    AF = _setup_arabic(__file__)   # Arabic font name
+    AB = AF + "-Bold" if AF != AF else AF
+    # Cairo is a variable font — use same name for bold
+    AB = AF
+
     url   = report_data.get("url", "")
     lang  = report_data.get("lang", "ar")
     score = float(report_data.get("score", 50))
     findings = report_data.get("findings", [])[:3]
     date_str = datetime.now().strftime("%Y-%m-%d")
     ar = lang == "ar"
+    def t(text): return reshape_ar(text) if ar else text
 
     c = pdfcanvas.Canvas(output_path, pagesize=A4)
     c.setTitle("MarketScan Preview — ProVision360")
@@ -103,16 +130,16 @@ def generate_simple_report(report_data: dict, output_path: str):
                     preserveAspectRatio=True, mask="auto")
     else:
         c.setFillColor(white)
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(40, H - 48, "PROVISION360")
+        c.setFont(AF, 14)
+        c.drawString(40, H - 48, t("PROVISION360")
 
     # Header right text
     c.setFillColor(C["pink"])
-    c.setFont("Helvetica-Bold", 8)
+    c.setFont(AF, 8)
     label = "تقرير تسويقي — نسخة مجانية" if ar else "Marketing Report — Free Preview"
     c.drawRightString(W - 40, H - 38, label)
     c.setFillColor(C["slate"])
-    c.setFont("Helvetica", 7)
+    c.setFont(AF, 7)
     c.drawRightString(W - 40, H - 52, date_str)
 
     y = H - 100
@@ -121,16 +148,16 @@ def generate_simple_report(report_data: dict, output_path: str):
     c.setFillColor(white)
     c.roundRect(30, y - 70, W - 60, 82, 10, fill=1, stroke=0)
     c.setFillColor(C["navy"])
-    c.setFont("Helvetica-Bold", 15)
+    c.setFont(AF, 15)
     title = "ملخص تحليل موقعك التسويقي" if ar else "Your Website Marketing Analysis"
     c.drawCentredString(W / 2, y - 20, title)
     c.setFillColor(C["muted"])
-    c.setFont("Helvetica", 8)
+    c.setFont(AF, 8)
     c.drawCentredString(W / 2, y - 38, url)
     c.setFillColor(C["border"])
     c.rect(40, y - 52, W - 80, 0.5, fill=1, stroke=0)
     c.setFillColor(C["slate"])
-    c.setFont("Helvetica", 7.5)
+    c.setFont(AF, 7.5)
     note = "هذه نسخة مجانية · اشترِ التقرير الكامل للحصول على خطة عمل متكاملة من 7 صفحات" if ar \
            else "Free preview · Purchase the full report for a complete 7-page action plan"
     c.drawCentredString(W / 2, y - 65, note)
@@ -145,7 +172,7 @@ def generate_simple_report(report_data: dict, output_path: str):
 
     lbl = "التقييم العام" if ar else "Overall Score"
     c.setFillColor(C["navy"])
-    c.setFont("Helvetica-Bold", 10)
+    c.setFont(AF, 10)
     c.drawCentredString(cx, y - 18, lbl)
 
     draw_gauge(c, cx, y - 78, 42, score)
@@ -153,7 +180,7 @@ def generate_simple_report(report_data: dict, output_path: str):
     sc_lbl = score_label(score, lang)
     sc_col = score_color(score)
     c.setFillColor(sc_col)
-    c.setFont("Helvetica-Bold", 10)
+    c.setFont(AF, 10)
     c.drawCentredString(cx, y - 108, sc_lbl)
 
     y -= 148
@@ -161,7 +188,7 @@ def generate_simple_report(report_data: dict, output_path: str):
     # ── Top findings ─────────────────────────────────────────────────────────
     sec_title = "أبرز 3 مشاكل وجدناها في موقعك" if ar else "Top 3 Issues Found on Your Website"
     c.setFillColor(C["navy"])
-    c.setFont("Helvetica-Bold", 11)
+    c.setFont(AF, 11)
     c.drawCentredString(W / 2, y - 14, sec_title)
     y -= 30
 
@@ -190,18 +217,18 @@ def generate_simple_report(report_data: dict, output_path: str):
         if ar:
             c.roundRect(W - 30 - tag_w - 10, y - 22, tag_w, 16, 4, fill=1, stroke=0)
             c.setFillColor(white)
-            c.setFont("Helvetica-Bold", 7)
+            c.setFont(AF, 7)
             c.drawCentredString(W - 30 - tag_w / 2 - 10, y - 14, priorities[i])
         else:
             c.roundRect(40, y - 22, tag_w, 16, 4, fill=1, stroke=0)
             c.setFillColor(white)
-            c.setFont("Helvetica-Bold", 7)
+            c.setFont(AF, 7)
             c.drawCentredString(40 + tag_w / 2, y - 14, priorities[i])
 
         # Title
         title_txt = f.get("title", "")
         c.setFillColor(C["text"])
-        c.setFont("Helvetica-Bold", 10)
+        c.setFont(AF, 10)
         if ar:
             c.drawRightString(W - 30 - tag_w - 16, y - 30, title_txt[:55])
         else:
@@ -215,7 +242,7 @@ def generate_simple_report(report_data: dict, output_path: str):
             teaser = ("احصل على التقرير الكامل لرؤية التفاصيل والحل" if ar
                       else "Get the full report to see details and solution")
         c.setFillColor(C["muted"])
-        c.setFont("Helvetica", 8)
+        c.setFont(AF, 8)
         if ar:
             c.drawRightString(W - 40, y - 48, teaser[:70])
         else:
@@ -223,7 +250,7 @@ def generate_simple_report(report_data: dict, output_path: str):
 
         # Lock icon hint
         c.setFillColor(C["border"])
-        c.setFont("Helvetica", 7)
+        c.setFont(AF, 7)
         lock = "🔒 الحل التفصيلي متاح في التقرير الكامل" if ar else "🔒 Detailed solution in full report"
         c.drawCentredString(W / 2, y - 62, lock)
 
@@ -249,26 +276,26 @@ def generate_simple_report(report_data: dict, output_path: str):
 
     if ar:
         c.setFillColor(C["pink"])
-        c.setFont("Helvetica-Bold", 10)
-        c.drawRightString(W - 50, y - 22, "🚀 احصل على التقرير الكامل — 9 ريال فقط")
+        c.setFont(AF, 10)
+        c.drawRightString(W - 50, y - 22, t("🚀 احصل على التقرير الكامل — 9 ريال فقط")
         c.setFillColor(white)
-        c.setFont("Helvetica", 8.5)
-        c.drawRightString(W - 50, y - 38, "7 صفحات · تحليل SEO كامل · خطة عمل مرحلية · مقارنة المنافسين")
-        c.drawRightString(W - 50, y - 52, "توقعات ROI · أسرع 10 إجراءات · تقرير PDF احترافي")
+        c.setFont(AF, 8.5)
+        c.drawRightString(W - 50, y - 38, t("7 صفحات · تحليل SEO كامل · خطة عمل مرحلية · مقارنة المنافسين")
+        c.drawRightString(W - 50, y - 52, t("توقعات ROI · أسرع 10 إجراءات · تقرير PDF احترافي")
         c.setFillColor(C["pink"])
-        c.setFont("Helvetica-Bold", 8)
-        c.drawRightString(W - 50, y - 70, "provision360.net/scan  ←")
+        c.setFont(AF, 8)
+        c.drawRightString(W - 50, y - 70, t("provision360.net/scan  ←")
     else:
         c.setFillColor(C["pink"])
-        c.setFont("Helvetica-Bold", 10)
-        c.drawString(50, y - 22, "🚀 Get the Full Report — Only 9 SAR")
+        c.setFont(AF, 10)
+        c.drawString(50, y - 22, t("🚀 Get the Full Report — Only 9 SAR")
         c.setFillColor(white)
-        c.setFont("Helvetica", 8.5)
-        c.drawString(50, y - 38, "7 pages · Full SEO audit · Phased action plan · Competitor benchmark")
-        c.drawString(50, y - 52, "ROI projections · Top 10 quick wins · Professional PDF")
+        c.setFont(AF, 8.5)
+        c.drawString(50, y - 38, t("7 pages · Full SEO audit · Phased action plan · Competitor benchmark")
+        c.drawString(50, y - 52, t("ROI projections · Top 10 quick wins · Professional PDF")
         c.setFillColor(C["pink"])
-        c.setFont("Helvetica-Bold", 8)
-        c.drawString(50, y - 70, "→  provision360.net/scan")
+        c.setFont(AF, 8)
+        c.drawString(50, y - 70, t("→  provision360.net/scan")
 
     # ── Services CTA ─────────────────────────────────────────────────────────
     y -= banner_h + 12
@@ -281,32 +308,32 @@ def generate_simple_report(report_data: dict, output_path: str):
 
     if ar:
         c.setFillColor(HexColor("#166534"))
-        c.setFont("Helvetica-Bold", 9.5)
-        c.drawRightString(W - 46, y - 18, "هل تريد فريقنا ينفّذ هذه التحسينات بدلاً عنك؟")
+        c.setFont(AF, 9.5)
+        c.drawRightString(W - 46, y - 18, t("هل تريد فريقنا ينفّذ هذه التحسينات بدلاً عنك؟")
         c.setFillColor(HexColor("#15803D"))
-        c.setFont("Helvetica", 8)
-        c.drawRightString(W - 46, y - 32, "فريق PROVISION360 متخصص في تحسين الأداء التسويقي والتقني للمواقع")
-        c.drawRightString(W - 46, y - 44, "SEO · محتوى · سرعة · تجربة مستخدم · إعلانات · تحسين التحويل")
+        c.setFont(AF, 8)
+        c.drawRightString(W - 46, y - 32, t("فريق PROVISION360 متخصص في تحسين الأداء التسويقي والتقني للمواقع")
+        c.drawRightString(W - 46, y - 44, t("SEO · محتوى · سرعة · تجربة مستخدم · إعلانات · تحسين التحويل")
         c.setFillColor(HexColor("#166534"))
-        c.setFont("Helvetica-Bold", 8)
-        c.drawRightString(W - 46, y - 58, "تواصل معنا:  info@provision360.net  |  provision360.net")
+        c.setFont(AF, 8)
+        c.drawRightString(W - 46, y - 58, t("تواصل معنا:  info@provision360.net  |  provision360.net")
     else:
         c.setFillColor(HexColor("#166534"))
-        c.setFont("Helvetica-Bold", 9.5)
-        c.drawString(46, y - 18, "Want our team to implement these improvements for you?")
+        c.setFont(AF, 9.5)
+        c.drawString(46, y - 18, t("Want our team to implement these improvements for you?")
         c.setFillColor(HexColor("#15803D"))
-        c.setFont("Helvetica", 8)
-        c.drawString(46, y - 32, "PROVISION360 specializes in website marketing & technical performance")
-        c.drawString(46, y - 44, "SEO · Content · Speed · UX · Ads · Conversion Rate Optimization")
+        c.setFont(AF, 8)
+        c.drawString(46, y - 32, t("PROVISION360 specializes in website marketing & technical performance")
+        c.drawString(46, y - 44, t("SEO · Content · Speed · UX · Ads · Conversion Rate Optimization")
         c.setFillColor(HexColor("#166534"))
-        c.setFont("Helvetica-Bold", 8)
-        c.drawString(46, y - 58, "Contact us:  info@provision360.net  |  provision360.net")
+        c.setFont(AF, 8)
+        c.drawString(46, y - 58, t("Contact us:  info@provision360.net  |  provision360.net")
 
     # ── Footer ───────────────────────────────────────────────────────────────
     c.setFillColor(C["border"])
     c.rect(30, 18, W - 60, 0.5, fill=1, stroke=0)
     c.setFillColor(C["slate"])
-    c.setFont("Helvetica", 7)
-    c.drawCentredString(W / 2, 8, "© 2026 PROVISION360  ·  provision360.net  ·  info@provision360.net")
+    c.setFont(AF, 7)
+    c.drawCentredString(W / 2, 8, t("© 2026 PROVISION360  ·  provision360.net  ·  info@provision360.net")
 
     c.save()

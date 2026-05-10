@@ -30,6 +30,29 @@ except ImportError:
     print("Error: reportlab is required.  pip install reportlab")
     sys.exit(1)
 
+# ── Arabic font support ───────────────────────────────────────────────────────
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont as _TTFont
+
+def _get_arabic_font(script_file):
+    fp = Path(script_file).parent / "static" / "fonts" / "Cairo-Regular.ttf"
+    if fp.exists():
+        try:
+            pdfmetrics.registerFont(_TTFont("Cairo", str(fp)))
+            return "Cairo"
+        except Exception:
+            pass
+    return "Helvetica"
+
+def _reshape(text):
+    try:
+        import arabic_reshaper
+        from bidi.algorithm import get_display
+        return get_display(arabic_reshaper.reshape(str(text)))
+    except Exception:
+        return str(text)
+
+
 PAGE_W, PAGE_H = A4  # 595 x 842 pts
 
 # ── Palette ──────────────────────────────────────────────────────────────────
