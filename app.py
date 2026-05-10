@@ -29,6 +29,7 @@ from analyzer import analyze_url
 from consultant_framer import frame_report
 
 # Try importing the PDF generator from workspace scripts or global skills
+# ── Full report (7 pages, paid) ───────────────────────────────────────────────
 PDF_SCRIPT = None
 for candidate in [
     Path(__file__).parent / "generate_pdf_report.py",
@@ -45,6 +46,15 @@ if PDF_SCRIPT:
     generate_pdf = _ns.get("generate_report")
 else:
     generate_pdf = None
+
+# ── Simple report (1 page, free demo) ────────────────────────────────────────
+_simple_path = Path(__file__).parent / "generate_pdf_simple.py"
+if _simple_path.exists():
+    _ns2 = {}
+    exec(open(_simple_path).read(), _ns2)
+    generate_pdf_simple = _ns2.get("generate_simple_report")
+else:
+    generate_pdf_simple = None
 
 stripe.api_key = STRIPE_SECRET_KEY
 
@@ -71,18 +81,23 @@ def _generate_and_store(token: str):
     if not order or order.get("pdf_ready"):
         return
 
-    url  = order["url"]
-    lang = order.get("lang", "ar")
+    url     = order["url"]
+    lang    = order.get("lang", "ar")
+    is_demo = order.get("demo", False)
 
     try:
         analysis    = analyze_url(url)
         report_data = frame_report(analysis, lang)
 
         out_path = PDF_DIR / f"report_{token}.pdf"
-        if generate_pdf:
+
+        if is_demo and generate_pdf_simple:
+            # Free demo → 1-page simple report
+            generate_pdf_simple(report_data, str(out_path))
+        elif generate_pdf:
+            # Paid → full 7-page report
             generate_pdf(report_data, str(out_path))
         else:
-            # Fallback: write JSON so the user can manually generate
             out_path = PDF_DIR / f"report_{token}.json"
             out_path.write_text(json.dumps(report_data, ensure_ascii=False, indent=2),
                                 encoding="utf-8")
@@ -240,12 +255,13 @@ def stripe_webhook():
 
 @app.route("/demo")
 def demo():
-    url  = request.args.get("url", "https://provision360.net/")
-    lang = request.args.get("lang", "ar")
+    url   = request.args.get("url", "https://provision360.net/")
+    lang  = request.args.get("lang", "ar")
     token = make_token()
     ORDERS[token] = {"url": url, "email": "demo@demo.com",
                      "lang": lang, "token": token,
                      "paid": True, "pdf_ready": False,
+                     "demo": True,
                      "created_at": datetime.now().isoformat()}
     _generate_and_store(token)
     return redirect(f"/download/{token}")
