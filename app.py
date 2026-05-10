@@ -31,6 +31,7 @@ from consultant_framer import frame_report
 # Try importing the PDF generator from workspace scripts or global skills
 PDF_SCRIPT = None
 for candidate in [
+    Path(__file__).parent / "generate_pdf_report.py",
     Path(__file__).parent.parent / "scripts" / "generate_pdf_report.py",
     Path.home() / ".claude" / "skills" / "market" / "scripts" / "generate_pdf_report.py",
 ]:
@@ -39,10 +40,6 @@ for candidate in [
         break
 
 if PDF_SCRIPT:
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("pdf_gen", PDF_SCRIPT)
-    pdf_mod = importlib.util.load_from_spec(spec) if hasattr(importlib.util, "load_from_spec") else None
-    # Fallback: direct import via exec
     _ns = {}
     exec(open(PDF_SCRIPT).read(), _ns)
     generate_pdf = _ns.get("generate_report")
