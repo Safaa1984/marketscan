@@ -270,11 +270,43 @@ def generate_simple_report(report_data: dict, output_path: str):
         c.setFont("Helvetica-Bold", 8)
         c.drawString(50, y - 70, "→  provision360.net/scan")
 
+    # ── Services CTA ─────────────────────────────────────────────────────────
+    y -= banner_h + 12
+    svc_h = 70
+    c.setFillColor(HexColor("#F0FDF4"))
+    c.roundRect(30, y - svc_h, W - 60, svc_h, 10, fill=1, stroke=0)
+    c.setStrokeColor(HexColor("#BBF7D0"))
+    c.setLineWidth(1)
+    c.roundRect(30, y - svc_h, W - 60, svc_h, 10, fill=0, stroke=1)
+
+    if ar:
+        c.setFillColor(HexColor("#166534"))
+        c.setFont("Helvetica-Bold", 9.5)
+        c.drawRightString(W - 46, y - 18, "هل تريد فريقنا ينفّذ هذه التحسينات بدلاً عنك؟")
+        c.setFillColor(HexColor("#15803D"))
+        c.setFont("Helvetica", 8)
+        c.drawRightString(W - 46, y - 32, "فريق PROVISION360 متخصص في تحسين الأداء التسويقي والتقني للمواقع")
+        c.drawRightString(W - 46, y - 44, "SEO · محتوى · سرعة · تجربة مستخدم · إعلانات · تحسين التحويل")
+        c.setFillColor(HexColor("#166534"))
+        c.setFont("Helvetica-Bold", 8)
+        c.drawRightString(W - 46, y - 58, "تواصل معنا:  info@provision360.net  |  provision360.net")
+    else:
+        c.setFillColor(HexColor("#166534"))
+        c.setFont("Helvetica-Bold", 9.5)
+        c.drawString(46, y - 18, "Want our team to implement these improvements for you?")
+        c.setFillColor(HexColor("#15803D"))
+        c.setFont("Helvetica", 8)
+        c.drawString(46, y - 32, "PROVISION360 specializes in website marketing & technical performance")
+        c.drawString(46, y - 44, "SEO · Content · Speed · UX · Ads · Conversion Rate Optimization")
+        c.setFillColor(HexColor("#166534"))
+        c.setFont("Helvetica-Bold", 8)
+        c.drawString(46, y - 58, "Contact us:  info@provision360.net  |  provision360.net")
+
     # ── Footer ───────────────────────────────────────────────────────────────
     c.setFillColor(C["border"])
     c.rect(30, 18, W - 60, 0.5, fill=1, stroke=0)
     c.setFillColor(C["slate"])
     c.setFont("Helvetica", 7)
-    c.drawCentredString(W / 2, 8, f"© 2026 PROVISION360  ·  provision360.net  ·  info@provision360.net")
+    c.drawCentredString(W / 2, 8, "© 2026 PROVISION360  ·  provision360.net  ·  info@provision360.net")
 
     c.save()

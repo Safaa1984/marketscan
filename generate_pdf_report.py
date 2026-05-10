@@ -837,35 +837,190 @@ def generate_report(data, output_path):
         els.append(Paragraph(f"<b>{i}.</b>  {w}", S["bullet"]))
         els.append(Spacer(1, 4))
 
-    els.append(Spacer(1, 24))
+    els.append(Spacer(1, 28))
 
-    offer = Table([
-        [Paragraph("READY TO IMPLEMENT THESE RECOMMENDATIONS?",
-                   ParagraphStyle("OT", fontSize=13, fontName="Helvetica-Bold",
-                                  textColor=white, alignment=TA_CENTER, spaceAfter=4))],
-        [Paragraph(
-            "This report gives you the strategy.<br/>We can build it — and measure results.",
-            ParagraphStyle("OB", fontSize=10, fontName="Helvetica",
-                           textColor=HexColor("#CBD5E1"), alignment=TA_CENTER,
-                           leading=16, spaceAfter=8)
-        )],
-        [Paragraph(
-            f'<font color="#{hex_str(C["orange"])}"><b>{url}</b></font>',
-            ParagraphStyle("OC", fontSize=12, fontName="Helvetica-Bold",
-                           alignment=TA_CENTER)
-        )],
-    ], colWidths=[455])
-    offer.setStyle(TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, -1), C["navy"]),
-        ("TOPPADDING",    (0, 0), (-1, -1), 18),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
-        ("LEFTPADDING",   (0, 0), (-1, -1), 20),
-        ("RIGHTPADDING",  (0, 0), (-1, -1), 20),
+    # ── Services invitation page ──────────────────────────────────────────────
+    from reportlab.platypus import PageBreak
+    els.append(PageBreak())
+
+    # Section header
+    els.append(Spacer(1, 10))
+
+    svc_title = (
+        "هل تريد فريق متخصص ينفّذ هذه التحسينات بدلاً عنك؟"
+        if lang == "ar" else
+        "Want an Expert Team to Implement These Improvements for You?"
+    )
+    els.append(Paragraph(svc_title, ParagraphStyle(
+        "SvcH", fontSize=18, fontName="Helvetica-Bold",
+        textColor=C["navy"], alignment=TA_CENTER, spaceAfter=10, leading=26
+    )))
+
+    svc_sub = (
+        "التقرير يكشف المشاكل — فريق PROVISION360 يحلّها ويقيس النتائج"
+        if lang == "ar" else
+        "The report reveals the problems — PROVISION360's team fixes them and tracks results"
+    )
+    els.append(Paragraph(svc_sub, ParagraphStyle(
+        "SvcS", fontSize=11, fontName="Helvetica",
+        textColor=C["slate"], alignment=TA_CENTER, spaceAfter=24, leading=18
+    )))
+
+    # Divider
+    els.append(HRFlowable(width="100%", thickness=1, color=C["blue_lt"], spaceAfter=20))
+
+    # Services grid — two columns
+    if lang == "ar":
+        services = [
+            ("تحسين محركات البحث (SEO)",
+             "بناء استراتيجية ظهور متكاملة: كلمات مفتاحية، روابط داخلية، بيانات منظّمة، وتقارير شهرية"),
+            ("محتوى تسويقي احترافي",
+             "كتابة صفحات المبيعات والمدونات والإعلانات بأسلوب يحوّل الزوار لعملاء"),
+            ("تحسين سرعة الموقع",
+             "تقنيات Core Web Vitals، ضغط الصور، التخزين المؤقت، وتقليل وقت التحميل"),
+            ("تجربة المستخدم (UX)",
+             "إعادة تصميم مسارات التحويل، صفحات الهبوط، والنماذج لزيادة معدل البيع"),
+            ("إدارة الإعلانات المدفوعة",
+             "حملات Google Ads وMeta Ads مدارة باحترافية مع تحسين مستمر للعائد"),
+            ("تحليل البيانات والتقارير",
+             "لوحات تحكم Google Analytics وSearch Console مع تقارير أداء شهرية واضحة"),
+        ]
+    else:
+        services = [
+            ("Search Engine Optimization (SEO)",
+             "Full visibility strategy: keyword research, internal linking, structured data, and monthly reporting"),
+            ("Professional Marketing Content",
+             "Sales pages, blogs, and ad copy written to convert visitors into paying customers"),
+            ("Website Speed Optimization",
+             "Core Web Vitals improvements, image compression, caching, and load time reduction"),
+            ("User Experience (UX) Design",
+             "Redesigning conversion paths, landing pages, and forms to maximize sales rate"),
+            ("Paid Advertising Management",
+             "Google Ads and Meta Ads managed professionally with continuous ROI optimization"),
+            ("Analytics & Performance Reports",
+             "Google Analytics and Search Console dashboards with clear monthly performance reports"),
+        ]
+
+    svc_rows = []
+    for i in range(0, len(services), 2):
+        left  = services[i]
+        right = services[i + 1] if i + 1 < len(services) else ("", "")
+
+        def svc_cell(svc):
+            if not svc[0]:
+                return Paragraph("", S["body"])
+            icon_map = {0: "01", 1: "02", 2: "03", 3: "04", 4: "05", 5: "06"}
+            return Table([
+                [Paragraph(f"<b>{svc[0]}</b>", ParagraphStyle(
+                    "SN", fontSize=10, fontName="Helvetica-Bold",
+                    textColor=C["navy"], spaceAfter=4
+                ))],
+                [Paragraph(svc[1], ParagraphStyle(
+                    "SD", fontSize=8.5, fontName="Helvetica",
+                    textColor=C["muted"] if "muted" in C else HexColor("#6B7280"),
+                    leading=13, spaceAfter=0
+                ))],
+            ], colWidths=[200])
+
+        svc_rows.append([svc_cell(left), svc_cell(right)])
+
+    svc_table = Table(svc_rows, colWidths=[225, 225], hAlign="CENTER")
+    svc_table.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), white),
+        ("TOPPADDING",    (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 16),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 16),
+        ("ROWBACKGROUNDS",(0, 0), (-1, -1), [C["blue_lt"], white]),
+        ("GRID",          (0, 0), (-1, -1), 0.5, C["gray_bd"] if "gray_bd" in C else HexColor("#E5E7EB")),
+        ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+        ("ROUNDEDCORNERS", [8], ),
     ]))
-    els.append(offer)
+    els.append(svc_table)
+    els.append(Spacer(1, 28))
+
+    # Why PROVISION360 banner
+    why_title = "لماذا PROVISION360؟" if lang == "ar" else "Why PROVISION360?"
+    els.append(Paragraph(why_title, ParagraphStyle(
+        "WhyH", fontSize=13, fontName="Helvetica-Bold",
+        textColor=C["navy"], alignment=TA_CENTER, spaceAfter=16
+    )))
+
+    if lang == "ar":
+        points = [
+            ("خبرة متخصصة", "فريق متخصص في السوق السعودي والخليجي مع فهم عميق للمستهلك المحلي"),
+            ("نتائج قابلة للقياس", "كل خدمة مرتبطة بمؤشرات أداء واضحة وتقارير شهرية شفافة"),
+            ("تكامل كامل", "نجمع بين التقنية والمحتوى والتسويق في حلول متكاملة وليس خدمات منفصلة"),
+            ("شراكة طويلة الأمد", "لسنا مجرد مقدمي خدمة — نحن شريكك في النمو الرقمي"),
+        ]
+    else:
+        points = [
+            ("Specialized Expertise", "A team specialized in Saudi and Gulf markets with deep local consumer insight"),
+            ("Measurable Results", "Every service tied to clear KPIs with transparent monthly reporting"),
+            ("Full Integration", "We combine tech, content, and marketing into unified solutions — not isolated services"),
+            ("Long-Term Partnership", "We're not just a vendor — we're your digital growth partner"),
+        ]
+
+    why_rows = [[
+        Paragraph(f"<b>{p[0]}</b><br/><font size='8' color='#6B7280'>{p[1]}</font>",
+                  ParagraphStyle("WP", fontSize=9, fontName="Helvetica",
+                                 textColor=C["navy"], leading=14, spaceAfter=0))
+        for p in points[:2]
+    ], [
+        Paragraph(f"<b>{p[0]}</b><br/><font size='8' color='#6B7280'>{p[1]}</font>",
+                  ParagraphStyle("WP2", fontSize=9, fontName="Helvetica",
+                                 textColor=C["navy"], leading=14, spaceAfter=0))
+        for p in points[2:]
+    ]]
+
+    why_table = Table(why_rows, colWidths=[225, 225], hAlign="CENTER")
+    why_table.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), C["blue_lt"]),
+        ("TOPPADDING",    (0, 0), (-1, -1), 14),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 16),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 16),
+        ("GRID",          (0, 0), (-1, -1), 0.5, HexColor("#DDD6FE")),
+        ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+    ]))
+    els.append(why_table)
+    els.append(Spacer(1, 28))
+
+    # Final CTA box
+    if lang == "ar":
+        cta_lines = [
+            ("تواصل معنا اليوم ونبدأ تحسين موقعك", 13, C["pink"]),
+            ("نراجع تقريرك معك مجاناً ونضع خطة عمل مخصصة لموقعك", 9, white),
+            ("info@provision360.net  |  +966 11 503 0388  |  provision360.net", 8.5, C["pink"]),
+        ]
+    else:
+        cta_lines = [
+            ("Contact Us Today and We'll Start Improving Your Website", 13, C["pink"]),
+            ("We'll review your report with you for free and build a tailored action plan", 9, white),
+            ("info@provision360.net  |  +966 11 503 0388  |  provision360.net", 8.5, C["pink"]),
+        ]
+
+    cta_cells = [[Paragraph(
+        f'<font size="{sz}" color="#{hex_str(col)}"><b>{txt}</b></font>' if i == 0
+        else f'<font size="{sz}" color="#{hex_str(col)}">{txt}</font>',
+        ParagraphStyle(f"CTA{i}", fontName="Helvetica-Bold" if i == 0 else "Helvetica",
+                       alignment=TA_CENTER, leading=18, spaceAfter=4)
+    )] for i, (txt, sz, col) in enumerate(cta_lines)]
+
+    cta_table = Table(cta_cells, colWidths=[455])
+    cta_table.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), C["navy"]),
+        ("TOPPADDING",    (0, 0), (-1, -1), 20),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 20),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 24),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 24),
+        ("ROUNDEDCORNERS", [10]),
+    ]))
+    els.append(cta_table)
     els.append(Spacer(1, 20))
+
     els.append(Paragraph(
-        f"Report prepared by PROVISION360  ·  provision360.net  ·  {date_str}  ·  For: {url}",
+        f"Report prepared by PROVISION360  |  provision360.net  |  {date_str}  |  {url}",
         ParagraphStyle("Foot2", fontSize=7.5, fontName="Helvetica",
                        textColor=C["text_lt"], alignment=TA_CENTER)
     ))
