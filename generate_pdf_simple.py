@@ -20,6 +20,11 @@ except ImportError:
 
 # ── Arabic support ────────────────────────────────────────────────────────────
 def _setup_arabic(script_file):
+    try:
+        pdfmetrics.getFont("Cairo")
+        return "Cairo"          # already registered — reuse it
+    except KeyError:
+        pass
     font_path = Path(script_file).parent / "static" / "fonts" / "Cairo-Regular.ttf"
     if font_path.exists():
         try:

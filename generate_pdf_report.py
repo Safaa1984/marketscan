@@ -35,6 +35,11 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont as _TTFont
 
 def _get_arabic_font(script_file):
+    try:
+        pdfmetrics.getFont("Cairo")
+        return "Cairo"          # already registered — reuse it
+    except KeyError:
+        pass
     fp = Path(script_file).parent / "static" / "fonts" / "Cairo-Regular.ttf"
     if fp.exists():
         try:
